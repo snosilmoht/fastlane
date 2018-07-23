@@ -1,3 +1,3 @@
-python C:\Users\dave\Repos\fastlane\game\test.py
+python test.py
 
 pause

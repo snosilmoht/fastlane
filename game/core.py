@@ -8,18 +8,7 @@ class SimpleGame():
 
         print "____new game"
 
-        charName = raw_input("enter your name: ")
-
-        self.curJobs = classifieds()
-
-        self.player = Character(
-                                name = charName,
-                                time = self.workWeek,
-                                currentJobs = self.curJobs,
-                                speedMultiplier = .33
-                                )
-
-        self.actionDictionary()
+        self.setup()
 
         while self.week <= 3:
             self.curJobs = classifieds()
@@ -41,6 +30,102 @@ class SimpleGame():
 
         return True
 
+    def setup(self):
+
+        charName = raw_input("enter your name: ")
+
+        self.curJobs = classifieds()
+
+        self.player = Character(
+                                name = charName,
+                                time = self.workWeek,
+                                currentJobs = self.curJobs,
+                                speedMultiplier = .33,
+                                salary = 200
+                                )
+
+        self.actionDictionary()
+
+    def addVenues():
+        venueDict = {
+
+                    'McDonalds' : 
+                        {
+                        'Cook':
+                                {
+                                 'title': 'Cook',
+                                 'salary': 10,
+                                 'prestige': 1,
+                                 'minApp': 0,
+                                 'minEdu': 0
+                                },
+                        'Supervisor':
+                                {
+                                 'title': 'Supervisor',
+                                 'salary': 12,
+                                 'prestige': 2,
+                                 'minApp': 0,
+                                 'minEdu': 1
+                                },
+                        'Manager':
+                                {
+                                 'title': 'Manager',
+                                 'salary': 15,
+                                 'prestige': 3,
+                                 'minApp': 1,
+                                 'minEdu': 2
+                                },
+                        'Owner':
+                                {
+                                 'title': 'Owner',
+                                 'salary': 25,
+                                 'prestige': 5,
+                                 'minApp': 2,
+                                 'minEdu': 4
+                                }
+                        }
+                     
+                    'Bank' : 
+                        {
+                        'Teller':
+                                {
+                                 'title': 'Teller',
+                                 'salary': 12,
+                                 'prestige': 1,
+                                 'minApp': 1,
+                                 'minEdu': 1
+                                },
+                        'Supervisor':
+                                {
+                                 'title': 'Supervisor',
+                                 'salary': 14,
+                                 'prestige': 2,
+                                 'minApp': 1,
+                                 'minEdu': 2
+                                },
+                        'Specialist':
+                                {
+                                 'title': 'Specialist',
+                                 'salary': 18,
+                                 'prestige': 3,
+                                 'minApp': 1,
+                                 'minEdu': 3
+                                },
+                        'Broker':
+                                {
+                                 'title': 'Broker',
+                                 'salary': 25,
+                                 'prestige': 5,
+                                 'minApp': 2,
+                                 'minEdu': 4
+                                }
+                        }
+                    }
+        for venue in venueDict:
+            for job in venueDict[venue]:
+
+
+
     def runWeek(self):
         '''
         the basic work week function that runs
@@ -61,10 +146,12 @@ class SimpleGame():
                         quit()
                         break
 
-                if act.lower() not in [key for key in self.actionDict.keys()]:
-                    print "improper command"
-
                 else:
+                    act = [key for key in self.actionDict.keys() if key.lower() == act.lower()][0]
+
+                    if not act:
+                        print "improper command"
+
                     exec(self.actionDict[act])
                     print "timer left: {}".format(self.player.timer)
                     print "savings: {}".format(self.player.savings)
@@ -97,6 +184,13 @@ class SimpleGame():
         print "____classifieds"
         for key in self.curJobs.jobs:
             print key, self.curJobs.jobs[key]
+
+class venue():
+    def __init__(self, name = None, type = None, location = [0,0], jobs = None):
+        self.name = None
+        self.type = None
+        self.location = location
+        self.jobs = None
 
 
 

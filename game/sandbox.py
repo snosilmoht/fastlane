@@ -1,4 +1,7 @@
-myList = {'a': 'ehh', 'b': "bee", 'c': "see"}
+myList = {'a': 'ehh', 'ASDF': "bee", 'c': "see"}
 
-if 'asdf' in myList.keys():
+myListLower = [key.lower() for key in myList.keys()]
+print myListLower
+
+if 'asdf'.lower() in myListLower:
     print 'true'
