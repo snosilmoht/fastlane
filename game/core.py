@@ -1,5 +1,16 @@
 
 
+'''
+to do:
+
+ --- do simple work test to have character work and count up the weeks!!!
+ 
+
+add race, age to character attribs
+
+
+'''
+
 class SimpleGame():
     def __init__(self, weekNb = 1, workWeek = 12):
         self.week = weekNb
@@ -83,7 +94,7 @@ class SimpleGame():
                                  'minApp': 2,
                                  'minEdu': 4
                                 }
-                        }
+                        },
                      
                     'Bank' : 
                         {
@@ -121,8 +132,6 @@ class SimpleGame():
                                 }
                         }
                     }
-        for venue in venueDict:
-            for job in venueDict[venue]:
 
 
 
