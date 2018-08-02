@@ -3,8 +3,10 @@
 '''
 to do:
 
- --- do simple work test to have character work and count up the weeks!!!
- 
+ --- add function to handle weeks, months, years, triggers for each
+ --- be able to load saves for unit tests
+ --- add unit tests
+ --- fix error on bad commands
 
 add race, age to character attribs
 
@@ -12,23 +14,51 @@ add race, age to character attribs
 '''
 
 class SimpleGame():
-    def __init__(self, weekNb = 1, workWeek = 12):
+    def __init__(self, weekNb = 1, workWeek = 12, timer = 0, gameOver = False, loadGame = False):
         self.week = weekNb
         self.workWeek = workWeek
-        self.timer = self.workWeek
+        self.timer = 0 #  self.workWeek
 
-        print "____new game"
-
-        self.setup()
+        self.setup(loadGame)
 
         while self.week <= 3:
             self.curJobs = classifieds()
             self.player.classifieds = self.curJobs
             print "_____Week {} _____".format(self.week)
-            self.player.timer = self.workWeek
+            self.player.timer = 0 #  self.workWeek
             self.runWeek()
+            self.week += 1
 
-    def actionDictionary(self):
+        print "game over"
+
+    def setup(self, loadGame = False):
+
+        if loadGame:
+
+            print 'load game'
+
+            charName = 'do'
+        else:
+
+            print "____new game"
+            charName = raw_input("enter your name: ")
+
+
+        self.curJobs = classifieds()
+        self.player = Character(
+                                name = charName,
+                                time = self.timer,
+                                currentJobs = self.curJobs,
+                                speedMultiplier = .33,
+                                salary = 15,
+                                workWeek = self.workWeek
+                                )
+
+
+
+        self.actionInterpreter()
+
+    def actionInterpreter(self):
         '''
         builds dictionary to interpret simple commands into character commands
         '''
@@ -41,106 +71,13 @@ class SimpleGame():
 
         return True
 
-    def setup(self):
-
-        charName = raw_input("enter your name: ")
-
-        self.curJobs = classifieds()
-
-        self.player = Character(
-                                name = charName,
-                                time = self.workWeek,
-                                currentJobs = self.curJobs,
-                                speedMultiplier = .33,
-                                salary = 200
-                                )
-
-        self.actionDictionary()
-
-    def addVenues():
-        venueDict = {
-
-                    'McDonalds' : 
-                        {
-                        'Cook':
-                                {
-                                 'title': 'Cook',
-                                 'salary': 10,
-                                 'prestige': 1,
-                                 'minApp': 0,
-                                 'minEdu': 0
-                                },
-                        'Supervisor':
-                                {
-                                 'title': 'Supervisor',
-                                 'salary': 12,
-                                 'prestige': 2,
-                                 'minApp': 0,
-                                 'minEdu': 1
-                                },
-                        'Manager':
-                                {
-                                 'title': 'Manager',
-                                 'salary': 15,
-                                 'prestige': 3,
-                                 'minApp': 1,
-                                 'minEdu': 2
-                                },
-                        'Owner':
-                                {
-                                 'title': 'Owner',
-                                 'salary': 25,
-                                 'prestige': 5,
-                                 'minApp': 2,
-                                 'minEdu': 4
-                                }
-                        },
-                     
-                    'Bank' : 
-                        {
-                        'Teller':
-                                {
-                                 'title': 'Teller',
-                                 'salary': 12,
-                                 'prestige': 1,
-                                 'minApp': 1,
-                                 'minEdu': 1
-                                },
-                        'Supervisor':
-                                {
-                                 'title': 'Supervisor',
-                                 'salary': 14,
-                                 'prestige': 2,
-                                 'minApp': 1,
-                                 'minEdu': 2
-                                },
-                        'Specialist':
-                                {
-                                 'title': 'Specialist',
-                                 'salary': 18,
-                                 'prestige': 3,
-                                 'minApp': 1,
-                                 'minEdu': 3
-                                },
-                        'Broker':
-                                {
-                                 'title': 'Broker',
-                                 'salary': 25,
-                                 'prestige': 5,
-                                 'minApp': 2,
-                                 'minEdu': 4
-                                }
-                        }
-                    }
-
-
 
     def runWeek(self):
         '''
         the basic work week function that runs
         '''
-        while self.timer > 0:
-            self.timer = self.player.timer
+        self.timer = 0
+        while self.timer < self.workWeek:
             act = raw_input("enter command: ")
             if act:
 
@@ -162,11 +99,12 @@ class SimpleGame():
                         print "improper command"
 
                     exec(self.actionDict[act])
-                    print "timer left: {}".format(self.player.timer)
                     print "savings: {}".format(self.player.savings)
+
+            self.timer = self.player.timer
                     #print self.actionDict[act]
-        if self.timer <= 0:
-            self.week += 1
+        #if self.timer <= 0:
+        #    self.week += 1
         return True
 
     def userHelp(self):
@@ -275,10 +213,11 @@ class Character():
                     hungry = False,
                     appearance = 0,
                     job = None,
-                    salary = 0,
-                    savings = 0,
+                    salary = 0.00,
+                    savings = 0.00,
                     education = 0,
-                    speedMultiplier = 1):
+                    speedMultiplier = 1,
+                    workWeek = 12):
 
         self.name = name
         self.classifieds = currentJobs
@@ -287,10 +226,11 @@ class Character():
         self.hungry = hungry
         self.appearance = appearance
         self.job = currentJobs.jobs['McDonalds']['Cook']#job
-        self.speed = 1
+        self.speed = 14.28
         self.salary = salary
         self.savings = savings
         self.education = education
+        self.workWeek = 12#workWeek
 
 
     def relax(self):
@@ -298,11 +238,11 @@ class Character():
         generic action to just take up time
         '''
         print "timer reduced by {} hours".format(self.speed)
-        self.timer = self.timer - self.speed
+        self.timer = self.timer + self.speed
         self.showCounter()
 
     def showCounter(self):
-        print 'you have {} hours left'.format(self.timer)
+        print 'you have {} hours left'.format((self.workWeek - self.timer))
 
     def applyForJob(self):
         jobsDict = self.classifieds.jobs
@@ -361,22 +301,25 @@ class Character():
             print "you don't have a job yet!"
 
         else:
-            self.timer = self.timer - (1*self.speed)
-            if self.timer < 0:
-                overage = float(1.0 - abs(self.timer))
-                self.savings = self.savings + (self.savings * overage)
+            self.timer = self.timer + (1*self.speed)
+            if self.timer < self.workWeek:
+                self.savings = self.salary + self.savings
+
+            elif self.timer > self.workWeek:
+                overage = abs(self.workWeek - self.timer)
+                print "overage by {} hours".format(overage)
+                self.savings = self.savings + (self.salary * overage)
                 #self.timer = 0
 
-            self.savings = self.salary + self.savings
-            
+            self.showCounter()
 
-
+def loadGame():
+    print 'hi'
 
 class Job():
     def __init__(self, salary = 10, prestige = 1):
         self.salary = salary
         self.prestige = prestige
-
 
 class Build():
     def __init__(self):

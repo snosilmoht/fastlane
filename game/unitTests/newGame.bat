@@ -1,0 +1,3 @@
+python newgame.py
+
+pause
