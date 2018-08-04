@@ -1,7 +1,26 @@
-myList = {'a': 'ehh', 'ASDF': "bee", 'c': "see"}
+import os
+import json
 
-myListLower = [key.lower() for key in myList.keys()]
-print myListLower
+saveFolder = r'C:\Users\dave\Repos\fastlane\game\saves'
 
-if 'asdf'.lower() in myListLower:
-    print 'true'
+gameData = {}
+
+gameData['weekNb'] = 2
+gameData['timer'] = 5
+
+
+class mycls():
+    def __init__(self):
+        print 'class init'
+        self.printShit()
+
+    def printShit(self):
+        funcs = [func for func in dir(self) if callable(getattr(self, func)) and not func.startswith("__")]
+
+        for f in funcs:
+            print f
+
+    def anotherClass(self):
+        print 'hello another class'
+
+go = mycls()

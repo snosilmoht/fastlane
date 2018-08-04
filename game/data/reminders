@@ -1,0 +1,13 @@
+1) Module names should be lowercase with underscores instead of spaces. (And should be valid module names for importing.)
+
+2) Variable names and function/method names should also be lowercase with underscores to separate words.
+
+3) Class names should be CamelCase (uppercase letter to start with, words run together, each starting with an uppercase letter).
+
+4) Module constants should be all uppercase.
+
+E.g. You would typically have module.ClassName.method_name.
+
+5) Module names in CamelCase with a main class name identical to the module name are annoying. (e.g. ConfigParser.ConfigParser, which should always be spelt configobj.ConfigObj.)
+
+6) Also, variables, functions, methods and classes which aren't part of your public API, should begin with a single underscore. (using double underscores to make attributes private almost always turns out to be a mistake - especially for testability.)

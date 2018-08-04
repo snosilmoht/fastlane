@@ -1,3 +1,5 @@
+import os
+import helpers
 
 
 '''
@@ -13,8 +15,59 @@ add race, age to character attribs
 
 '''
 
+
+class build():
+    def __init__(self, title = 'build game'):
+        print 'build game initiated'
+        self.run()
+
+    def run(self):
+        qRun = raw_input("new game? ")
+        print qRun
+
+        if qRun.lower() == 'y':
+            self.newGame()
+
+    def newGame(self):
+        print 'new game'
+        self.game = game()
+
+    def loadGame(self):
+        loadFile = self.loadFile()
+
+    def loadFile(self):
+        print 'no functionality yet'
+
+
+class game():
+    def __init__(self, chars = [], weekNb = 1, timer = 0, newGame = True):
+        self.characters = chars
+        self.week = weekNb
+        self.timer = timer
+
+        if newGame:
+            self.print_functions()
+            self.setup_players()
+
+    def setup_players(self):
+        print 'setting up game'
+
+        nbChars = helpers.input_integer('Number of Players: ')
+
+        for i in range(nbChars):
+            charName = raw_input('character name: ')
+            self.characters.append(Character(charName))
+
+    def print_functions(self):
+        print helpers.getFunctions(self)
+
+
 class SimpleGame():
-    def __init__(self, weekNb = 1, workWeek = 12, timer = 0, gameOver = False, loadGame = False):
+    '''
+    DEPRECATED, FOR REFERENCE ONLY!!!
+    JUST A TEST
+    '''
+    def __init__(self, weekNb = 1, workWeek = 12, timer = 0, gameOver = False):
         self.week = weekNb
         self.workWeek = workWeek
         self.timer = 0 #  self.workWeek
@@ -132,14 +185,6 @@ class SimpleGame():
         for key in self.curJobs.jobs:
             print key, self.curJobs.jobs[key]
 
-class venue():
-    def __init__(self, name = None, type = None, location = [0,0], jobs = None):
-        self.name = None
-        self.type = None
-        self.location = location
-        self.jobs = None
-
-
 
 class classifieds():
     def __init__(self):
@@ -204,7 +249,119 @@ class classifieds():
                 return self.jobs[job]
 
 
+
 class Character():
+    def __init__(   self,
+                    name = "joe",
+                    time = 12.0,
+                    apartment = None,
+                    hungry = False,
+                    appearance = 0,
+                    job = None,
+                    salary = 0.00,
+                    savings = 0.00,
+                    education = 0,
+                    speedMultiplier = 1,
+                    workWeek = 12):
+
+        self.name = name
+        self.timer = time
+        self.house = apartment
+        self.hungry = hungry
+        self.appearance = appearance
+        self.job = None #currentJobs.jobs['McDonalds']['Cook']#job
+        self.speed = 14.28
+        self.salary = salary
+        self.savings = savings
+        self.education = education
+        self.workWeek = 12#workWeek
+
+
+    def relax(self):
+        '''
+        generic action to just take up time
+        '''
+        print "timer reduced by {} hours".format(self.speed)
+        self.timer = self.timer + self.speed
+        self.showCounter()
+
+    def showCounter(self):
+        print 'you have {} hours left'.format((self.workWeek - self.timer))
+
+    def applyForJob(self):
+        jobsDict = self.classifieds.jobs
+
+        for location in jobsDict:
+            print location
+            for job in jobsDict[location]:
+                print "  {}".format(job)
+
+
+        inLoc = raw_input("where do you want to work? ")
+        validLoc = [loc for loc in jobsDict.keys() if loc.lower() == inLoc.lower()]
+        if not validLoc:
+            print 'Error: not a valid location'
+            self.applyForJob()
+
+        validLoc = validLoc[0]
+
+        
+        inJob = raw_input("what job do you want to apply for? ")
+        validJob = [job for job in jobsDict[validLoc].keys() if job.lower() == inJob.lower()]
+        if not validJob:
+            print "Error: not a valid job"
+            self.applyForJob()
+
+        else:
+            validJob = validJob[0]
+            goalJob = jobsDict[validLoc][validJob]
+
+            #  check for minimum requirements for jobs
+
+            if self.appearance < goalJob['minApp']:
+                print "you did not get the job, need better appearance."
+                self.timer = self.timer - .25
+                return None
+
+
+            elif self.education < goalJob['minEdu']:
+                print "you did meet the minimum education requirements."
+                self.timer = self.timer - .25
+                return None
+
+            else:
+                print 'you got hired as {0}, with a salary of {1}'.format(validJob, jobsDict[validLoc][validJob]['salary'])
+                self.job = jobsDict[validLoc][validJob]
+                self.salary = self.job['salary']
+
+        if not self.job:
+            print "you are now still unemployed."
+
+        self.timer = self.timer - .25
+
+    def work(self):
+        #print "working"
+        if not self.job:
+            print "you don't have a job yet!"
+
+        else:
+            self.timer = self.timer + (1*self.speed)
+            if self.timer < self.workWeek:
+                self.savings = self.salary + self.savings
+
+            elif self.timer > self.workWeek:
+                overage = abs(self.workWeek - self.timer)
+                print "overage by {} hours".format(overage)
+                self.savings = self.savings + (self.salary * overage)
+                #self.timer = 0
+
+            self.showCounter()
+
+
+
+
+'''
+class oldCharacter():
     def __init__(   self,
                     name = "joe",
                     currentJobs = None,
@@ -225,7 +382,7 @@ class Character():
         self.house = apartment
         self.hungry = hungry
         self.appearance = appearance
-        self.job = currentJobs.jobs['McDonalds']['Cook']#job
+        self.job = None #currentJobs.jobs['McDonalds']['Cook']#job
         self.speed = 14.28
         self.salary = salary
         self.savings = savings
@@ -234,9 +391,6 @@ class Character():
 
 
     def relax(self):
-        '''
-        generic action to just take up time
-        '''
         print "timer reduced by {} hours".format(self.speed)
         self.timer = self.timer + self.speed
         self.showCounter()
@@ -331,3 +485,12 @@ class Build():
 class Week():
     def __init__(self, week = 0):
         self.week = week
+'''
+
+
+class venue():
+    def __init__(self, name = None, type = None, location = [0,0], jobs = None):
+        self.name = None
+        self.type = None
+        self.location = location
+        self.jobs = None
