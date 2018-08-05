@@ -1,4 +1,4 @@
-def get_fuctions(obj):
+def get_functions(obj):
     lFns = [func for func in dir(obj) if callable(getattr(obj, func)) and not func.startswith("__")]
     return lFns
 
@@ -26,11 +26,13 @@ def interpreter(obj, keyword):
     returns appropriate function
     '''
 
-
-    self.actionDict= {}
-    method_list = get_fuctions(obj)
+    actionDict= {}
+    method_list = get_functions(obj)
 
     for method in method_list:
-        self.actionDict[method] = "obj.{}()".format(method)#obj.__dict__[method]
+        actionDict[method] = "obj.{}()".format(method)#obj.__dict__[method]
+
+    act = [key for key in actionDict.keys() if key.lower() == keyword.lower()][0]
+    exec(actionDict[act])
 
     return True

@@ -1,4 +1,5 @@
 import os
+import json
 import helpers
 
 
@@ -15,7 +16,6 @@ add race, age to character attribs
 
 '''
 
-
 class build():
     def __init__(self, title = 'build game'):
         print 'build game initiated'
@@ -26,17 +26,18 @@ class build():
         print qRun
 
         if qRun.lower() == 'y':
-            self.newGame()
+            self.load_game()
 
-    def newGame(self):
+        if qRun.lower() == 'l':
+            self.load_game()
+
+    def load_game(self):
         print 'new game'
         self.game = game()
 
     def loadGame(self):
-        loadFile = self.loadFile()
-
-    def loadFile(self):
-        print 'no functionality yet'
+        loadFile = loadSettings
+        self.game = game(newGame = False)
 
 
 class game():
@@ -48,18 +49,61 @@ class game():
         if newGame:
             self.print_functions()
             self.setup_players()
+            self.run_game()
 
     def setup_players(self):
         print 'setting up game'
 
-        nbChars = helpers.input_integer('Number of Players: ')
+        nbChars = 1 #helpers.input_integer('Number of Players: ')
 
         for i in range(nbChars):
             charName = raw_input('character name: ')
             self.characters.append(Character(charName))
 
+        return True
+
     def print_functions(self):
-        print helpers.getFunctions(self)
+        self.help()
+        return True
+
+    def run_game(self):
+        print "running game game"
+        self.run_week()
+
+    def run_week(self):
+        print "run week"
+        self.timer = 0
+        for character in self.characters:
+            print "-------------{}'s turn".format(character.name)
+            while self.timer < 12:
+                action = helpers.interpreter(self, raw_input('enter action: '))
+
+
+    def help(self):
+        print helpers.get_functions(self)
+        return True
+
+    def save(self):
+        #  save game settings
+        relativePath = os.path.dirname(os.path.abspath(__file__))
+        saveDir = os.path.join(relativePath, 'saves')
+        saveName = 'testSave'
+
+        saveFile = os.path.join(saveDir, saveName)
+        
+        saveGame = {'game': vars(self)}
+
+        for i, char in enumerate(self.characters):
+            saveGame['player{}'.format(i)] = vars(char)
+
+        for key in saveGame.keys():
+            print "{0} : {1}".format(key, saveGame[key])
+
+        '''
+        with open(saveName, 'w') as outfile:
+            json.dump(saveGame, outfile)
+        '''
+
 
 
 class SimpleGame():

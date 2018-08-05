@@ -1,6 +1,12 @@
 import os
 import json
 
+def save():
+    relativePath = os.path.dirname(os.path.abspath(__file__))
+    saveDir = os.path.join(relativePath, 'saves')
+
+    print saveDir
+
 saveFolder = r'C:\Users\dave\Repos\fastlane\game\saves'
 
 gameData = {}
@@ -11,8 +17,10 @@ gameData['timer'] = 5
 
 class mycls():
     def __init__(self):
-        print 'class init'
-        self.printShit()
+        self.attr1 = 'attribute 1'
+        self.legs = 2
+        self.someDict = {'key1': "balls_out!", 'response2': 'no way!'}
+        #self.printShit()
 
     def printShit(self):
         funcs = [func for func in dir(self) if callable(getattr(self, func)) and not func.startswith("__")]
@@ -23,4 +31,33 @@ class mycls():
     def anotherClass(self):
         print 'hello another class'
 
-go = mycls()
+class gameClass():
+    def __init__(self):
+        characters = []
+        self.clsInstance1 = mycls()
+        self.clsInstance2 = mycls()
+
+        self.clsInstance1.legs = 3
+        self.clsInstance2.legs = 120
+
+    def doShit(self):
+        self.clsInstance2.attr1 = 'attribute 2'
+
+
+def printkeys():
+    print '--- keys ---'
+    go = gameClass()
+
+    print vars(go)
+    for var in vars(go):
+        print type(var)
+    for key in vars(go).keys():
+        print key
+
+def printDict():
+    print '--- __dict__ ---'
+    gameInstance = gameClass()
+    print gameInstance.__dict__
+
+printDict()
+printkeys()
