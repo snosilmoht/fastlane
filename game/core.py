@@ -6,10 +6,15 @@ import helpers
 '''
 to do:
 
- --- add function to handle weeks, months, years, triggers for each
- --- be able to load saves for unit tests
- --- add unit tests
- --- fix error on bad commands
+ --- functions to handle weeks, months, years, triggers for each
+ --- add more unit tests
+ ----- fix error on bad commands
+ --- apply for job function
+ --- work function
+ --- relax function
+ --- shop functions
+
+
 
 add race, age to character attribs
 
@@ -22,43 +27,43 @@ class build():
         self.run()
 
     def run(self):
-        qRun = raw_input("new game? ")
+        qRun = raw_input("press n for new game, l for load game: ")
         print qRun
 
-        if qRun.lower() == 'y':
-            self.load_game()
+        if qRun.lower() == 'n':
+            self.new_game()
 
         if qRun.lower() == 'l':
             self.load_game()
 
     def load_game(self):
+        print 'load game'
+        self.game = Game()
+        self.game.load()
+
+    def new_game(self):
         print 'new game'
-        self.game = game()
-
-    def loadGame(self):
-        loadFile = loadSettings
-        self.game = game(newGame = False)
+        self.game = Game()
+        self.game.setup()
 
 
-class game():
-    def __init__(self, chars = [], weekNb = 1, timer = 0, newGame = True):
+class Game():
+    def __init__(self, chars = [], weekNb = 1, timer = 0):
         self.characters = chars
         self.week = weekNb
         self.timer = timer
 
-        if newGame:
-            self.print_functions()
-            self.setup_players()
-            self.run_game()
-
-    def setup_players(self):
+    def setup(self):
         print 'setting up game'
 
-        nbChars = 1 #helpers.input_integer('Number of Players: ')
+        nbChars = helpers.input_integer('Number of Players: ')
 
         for i in range(nbChars):
             charName = raw_input('character name: ')
             self.characters.append(Character(charName))
+
+
+        self.run_game()
 
         return True
 
@@ -67,17 +72,17 @@ class game():
         return True
 
     def run_game(self):
-        print "running game game"
+        print "running game"
         self.run_week()
 
     def run_week(self):
         print "run week"
         self.timer = 0
         for character in self.characters:
+            self.current_character = character
             print "-------------{}'s turn".format(character.name)
             while self.timer < 12:
                 action = helpers.interpreter(self, raw_input('enter action: '))
-
 
     def help(self):
         print helpers.get_functions(self)
@@ -87,22 +92,59 @@ class game():
         #  save game settings
         relativePath = os.path.dirname(os.path.abspath(__file__))
         saveDir = os.path.join(relativePath, 'saves')
-        saveName = 'testSave'
+        saveName = '.'.join([raw_input("name of save file: "), 'fst'])#'testSave.fst'
 
         saveFile = os.path.join(saveDir, saveName)
+
+        saveData = {'week' : self.week,
+                    'timer' :  self.timer
+                    }
+
+        saveData['character'] = []
         
-        saveGame = {'game': vars(self)}
+        for char in self.characters:
+            saveData['character'].append(char.save())
 
-        for i, char in enumerate(self.characters):
-            saveGame['player{}'.format(i)] = vars(char)
+        print 'saving to {}'.format(saveFile)
+        with open(saveFile, 'w') as outfile:
+            json.dump(saveData, outfile)
 
-        for key in saveGame.keys():
-            print "{0} : {1}".format(key, saveGame[key])
+    def load(self):
+        
+        loadName = 'testSave.fst'
 
-        '''
-        with open(saveName, 'w') as outfile:
-            json.dump(saveGame, outfile)
-        '''
+        relativePath = os.path.dirname(os.path.abspath(__file__))
+        loadDir = os.path.join(relativePath, 'saves')
+        loadFile = os.path.join(loadDir, loadName)
+
+        print "_______loading {}".format(loadFile)
+
+        with open(loadFile) as json_file:
+            gameData = json.load(json_file)
+        
+        self.week = gameData['week']
+        self.timer = gameData['timer']
+
+        for char in gameData['character']:
+            newChar = Character()
+            newChar.load(char)
+            self.characters.append(newChar)
+
+        self.run_game()
+
+    def character_info(self):
+        if self.current_character:
+
+            print 'Name:       {}'.format(self.current_character.name)
+            print 'Savings:    {}'.format(self.current_character.savings)
+            print 'Salary:     {}/hr'.format(self.current_character.salary)
+            print 'Job:        {}'.format(self.current_character.job)
+            print 'Edu.level:  {}'.format(self.current_character.education)
+
+        else:
+            print "no character intialized"
+        return True
+
 
 
 
@@ -296,7 +338,7 @@ class classifieds():
 
 class Character():
     def __init__(   self,
-                    name = "joe",
+                    name = None,
                     time = 12.0,
                     apartment = None,
                     hungry = False,
@@ -319,6 +361,8 @@ class Character():
         self.savings = savings
         self.education = education
         self.workWeek = 12#workWeek
+
+
 
 
     def relax(self):
@@ -400,6 +444,25 @@ class Character():
                 #self.timer = 0
 
             self.showCounter()
+
+    def save(self):
+        charData = {}
+
+        charData['name'] = self.name
+        charData['job'] = self.job
+        charData['savings'] = self.savings
+        charData['salary'] = self.salary
+        charData['education'] = self.education
+
+        return charData
+
+    def load(self, data):
+        self.name = data['name']
+        self.job = data['job']
+        self.savings = data['savings']
+        self.salary = data['salary']
+        self.education = data['education']
+        return
 
 
 
