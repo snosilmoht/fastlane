@@ -9,6 +9,7 @@ to do:
  --- functions to handle weeks, months, years, triggers for each
  --- add more unit tests
  ----- fix error on bad commands
+ --- build jobs dictionary
  --- apply for job function
  --- work function
  --- relax function
@@ -65,6 +66,9 @@ class Game():
 
         self.run_game()
 
+        return True
+
+    def createLocations(self):
         return True
 
     def print_functions(self):
@@ -132,7 +136,7 @@ class Game():
 
         self.run_game()
 
-    def character_info(self):
+    def info(self):
         if self.current_character:
 
             print 'Name:       {}'.format(self.current_character.name)
@@ -144,6 +148,13 @@ class Game():
         else:
             print "no character intialized"
         return True
+
+    def work(self):
+        self.timer += 1
+
+    def applyForJob(self):
+        self.current_character
+
 
 
 
