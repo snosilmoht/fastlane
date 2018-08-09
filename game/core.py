@@ -9,11 +9,19 @@ to do:
  --- functions to handle weeks, months, years, triggers for each
  --- add more unit tests
  ----- fix error on bad commands
- --- build jobs dictionary
+ --- build jobs dictionary (= save file)
  --- apply for job function
  --- work function
  --- relax function
  --- shop functions
+
+ --- locations:
+        locations are currently only loaded from locs1.fll file, need to turn
+        those locations into actual locations with classes eventually:
+
+     --- function to create locations based on location file (locs1.fll)
+     --- function to create classifieds based on locations (instead of loading from locs.fll)
+     --- need to save locations/classifieds information to location file (locs1.fll)
 
 
 
@@ -82,6 +90,9 @@ class Game():
     def run_week(self):
         print "run week"
         self.timer = 0
+
+        self.build_classifieds()
+
         for character in self.characters:
             self.current_character = character
             print "-------------{}'s turn".format(character.name)
@@ -94,12 +105,17 @@ class Game():
 
     def save(self):
         #  save game settings
-        relativePath = os.path.dirname(os.path.abspath(__file__))
-        saveDir = os.path.join(relativePath, 'saves')
         saveName = '.'.join([raw_input("name of save file: "), 'fst'])#'testSave.fst'
 
-        saveFile = os.path.join(saveDir, saveName)
+        saveFile = helpers.get_relative_file('saves', saveName)
 
+        '''
+        relativePath = os.path.dirname(os.path.abspath(__file__))
+        saveDir = os.path.join(relativePath, 'saves')
+
+
+        saveFile = os.path.join(saveDir, saveName)
+        '''
         saveData = {'week' : self.week,
                     'timer' :  self.timer
                     }
@@ -114,12 +130,8 @@ class Game():
             json.dump(saveData, outfile)
 
     def load(self):
-        
         loadName = 'testSave.fst'
-
-        relativePath = os.path.dirname(os.path.abspath(__file__))
-        loadDir = os.path.join(relativePath, 'saves')
-        loadFile = os.path.join(loadDir, loadName)
+        loadFile = helpers.get_relative_file('saves', loadName)
 
         print "_______loading {}".format(loadFile)
 
@@ -144,16 +156,41 @@ class Game():
             print 'Salary:     {}/hr'.format(self.current_character.salary)
             print 'Job:        {}'.format(self.current_character.job)
             print 'Edu.level:  {}'.format(self.current_character.education)
-
         else:
             print "no character intialized"
+
+        print self.classifieds.keys()
+
+
         return True
 
     def work(self):
         self.timer += 1
 
-    def applyForJob(self):
-        self.current_character
+    def apply_for_job(self):
+
+        for location in self.classifieds:
+            print location
+            for job in self.classifieds[location]['job']:
+                print "  {}".format(job)
+
+
+        inLoc = raw_input("where do you want to work? ")
+        validLoc = [loc for loc in self.classifieds.keys() if loc.lower() == inLoc.lower()]
+        if not validLoc:
+            print 'Error: not a valid location'
+            self.apply_for_job()
+
+        else:
+            print 'job: {}'.format(inLoc)
+
+    def build_classifieds(self):
+        print '-----building classfieds'
+        jobsFile = helpers.get_relative_file('saves', 'locs1.fll')
+
+        with open(jobsFile) as json_file:
+            self.classifieds = json.load(json_file)
+        
 
 
 

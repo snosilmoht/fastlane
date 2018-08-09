@@ -1,3 +1,5 @@
+import os
+
 def get_functions(obj):
     lFns = [func for func in dir(obj) if callable(getattr(obj, func)) and not func.startswith("__")]
     return lFns
@@ -36,3 +38,17 @@ def interpreter(obj, keyword):
     exec(actionDict[act])
 
     return True
+
+def get_relative_file(folderName = None, fileName = None):
+    fileName = fileName
+
+    relativePath = os.path.dirname(os.path.abspath(__file__))
+
+    if folderName == '' or folderName == None:
+        outFile = os.path.join(relativePath, fileName)
+
+    else:
+        fileDir = os.path.join(relativePath, folderName)
+        outFile = os.path.join(fileDir, fileName)
+
+    return outFile
