@@ -168,21 +168,56 @@ class Game():
         self.timer += 1
 
     def apply_for_job(self):
+        '''
+        return True
+        '''
 
+        #  Display Classifieds
         for location in self.classifieds:
             print location
             for job in self.classifieds[location]['job']:
                 print "  {}".format(job)
 
 
+        #  Get valid location input
+
         inLoc = raw_input("where do you want to work? ")
         validLoc = [loc for loc in self.classifieds.keys() if loc.lower() == inLoc.lower()]
-        if not validLoc:
+        if len(validLoc) == 0:
             print 'Error: not a valid location'
             self.apply_for_job()
 
         else:
-            print 'job: {}'.format(inLoc)
+            validLoc = validLoc[0]
+
+        
+        #  Get valid job input
+
+        inJob = raw_input('what job? ')
+        
+        validJob = [job for job in self.classifieds[validLoc]['job'].keys() if job.lower() == inJob.lower()][0]
+
+        if len(validJob) == 0:
+            print "Error: not a valid job"
+            self.apply_for_job()
+
+
+        goalJob = self.classifieds[validLoc]['job'][validJob]
+
+        if self.current_character.appearance < goalJob['minApp']:
+            print "you did not get the job, need better appearance."
+            return None
+
+        elif self.current_character.education < goalJob['minEdu']:
+            print "you did meet the minimum education requirements."
+            return None
+
+        else:
+            self.current_character.job = goalJob['title']
+            self.current_character.salary = goalJob['salary']
+            return True
+
+
 
     def build_classifieds(self):
         print '-----building classfieds'
