@@ -59,5 +59,22 @@ def printDict():
     gameInstance = gameClass()
     print gameInstance.__dict__
 
-printDict()
-printkeys()
+def multiText():
+    slob = True
+    idiot = True
+
+    if slob or idiot:
+        r = 'you are {slob}{also}{dumb}'.format(slob = 'a slob ' if slob else "",
+                                                also = 'and ' if slob and idiot else "",
+                                                dumb = 'dumb' if idiot else "")
+
+        print r
+
+def keys():
+    myDict = {"key1": "fuck", 'key2': "shit"}
+    return myDict
+
+dic = keys()
+
+print dic.keys()
+

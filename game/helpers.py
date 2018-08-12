@@ -52,3 +52,13 @@ def get_relative_file(folderName = None, fileName = None):
         outFile = os.path.join(fileDir, fileName)
 
     return outFile
+
+def load_attr(source, key):
+    try:
+        'loading source'
+        print '{0}: {1}'.format(key, source[key] )
+        return source[key]
+
+    except KeyError as e:
+        print "{} missing from file, set to None".format(key)
+        return None

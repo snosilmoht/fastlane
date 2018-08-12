@@ -1,0 +1,1 @@
+{"week": 5, "character": [{"salary": 10, "savings": 2312.5, "job": "Cook", "education": 0, "name": "dave"}, {"salary": 9, "savings": 2081.25, "job": "janitor", "education": 0, "name": "dani"}], "timer": 0}

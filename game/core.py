@@ -1,19 +1,18 @@
 import os
 import json
+#import simplejson
 import helpers
 
 
 '''
 to do:
 
- --- functions to handle weeks, months, years, triggers for each
  --- add more unit tests
  ----- fix error on bad commands
  --- build jobs dictionary (= save file)
- --- apply for job function
- --- work function
  --- relax function
  --- shop functions
+ --- health insurance!
 
  --- locations:
         locations are currently only loaded from locs1.fll file, need to turn
@@ -22,7 +21,8 @@ to do:
      --- function to create locations based on location file (locs1.fll)
      --- function to create classifieds based on locations (instead of loading from locs.fll)
      --- need to save locations/classifieds information to location file (locs1.fll)
-
+ 
+ --- add interest to loans
 
 
 add race, age to character attribs
@@ -57,7 +57,7 @@ class build():
 
 
 class Game():
-    def __init__(self, chars = [], weekNb = 1, timer = 0):
+    def __init__(self, chars = [], weekNb = 1, timer = 0.0):
         self.characters = chars
         self.week = weekNb
         self.timer = timer
@@ -85,19 +85,25 @@ class Game():
 
     def run_game(self):
         print "running game"
-        self.run_week()
+        while self.week < 144:
+            self.run_week()
 
     def run_week(self):
-        print "run week"
-        self.timer = 0
-
+        print "-------week number {}".format(self.week)
         self.build_classifieds()
 
         for character in self.characters:
+            self.timer = 0
             self.current_character = character
             print "-------------{}'s turn".format(character.name)
+            self.weekly_event()
             while self.timer < 12:
                 action = helpers.interpreter(self, raw_input('enter action: '))
+                self.displayTime()
+
+            print "Week Over"
+
+        self.week += 1
 
     def help(self):
         print helpers.get_functions(self)
@@ -109,13 +115,6 @@ class Game():
 
         saveFile = helpers.get_relative_file('saves', saveName)
 
-        '''
-        relativePath = os.path.dirname(os.path.abspath(__file__))
-        saveDir = os.path.join(relativePath, 'saves')
-
-
-        saveFile = os.path.join(saveDir, saveName)
-        '''
         saveData = {'week' : self.week,
                     'timer' :  self.timer
                     }
@@ -130,7 +129,7 @@ class Game():
             json.dump(saveData, outfile)
 
     def load(self):
-        loadName = 'testSave.fst'
+        loadName = '2player_001.fst'
         loadFile = helpers.get_relative_file('saves', loadName)
 
         print "_______loading {}".format(loadFile)
@@ -156,6 +155,7 @@ class Game():
             print 'Salary:     {}/hr'.format(self.current_character.salary)
             print 'Job:        {}'.format(self.current_character.job)
             print 'Edu.level:  {}'.format(self.current_character.education)
+            print 'week nb:    {}'.format(self.week)
         else:
             print "no character intialized"
 
@@ -165,6 +165,22 @@ class Game():
         return True
 
     def work(self):
+
+        if not self.current_character.job:
+            print 'you are unemployed!'
+            return False
+
+        workTimer = self.timer + 1
+
+        overtime = None
+
+        if workTimer - 12.0 > 0:
+            overtime = self.timer - 12.0
+            print "overtime hours: {}"
+
+        t = (overtime if overtime else 1)
+        self.current_character.savings = self.current_character.savings + ((self.current_character.salary * 5) * t)
+        
         self.timer += 1
 
     def apply_for_job(self):
@@ -203,20 +219,108 @@ class Game():
 
 
         goalJob = self.classifieds[validLoc]['job'][validJob]
+        slob = False
+        idiot = False
 
         if self.current_character.appearance < goalJob['minApp']:
-            print "you did not get the job, need better appearance."
-            return None
+            slob = True
 
-        elif self.current_character.education < goalJob['minEdu']:
-            print "you did meet the minimum education requirements."
-            return None
+        if self.current_character.education < goalJob['minEdu']:
+            idiot = True
+
+
+        if slob or idiot:
+            print "you did not get the job"
+            r = 'you are {slob}{also}{dumb}.'.format(slob = 'a slob ' if slob else "",
+                                                    also = 'and ' if slob and idiot else "",
+                                                    dumb = 'dumb' if idiot else "")
+
+            print r
+            self.timer += .25
+
+            return False
 
         else:
             self.current_character.job = goalJob['title']
             self.current_character.salary = goalJob['salary']
+
+            print "you got the job, you current position is {0}, you earn ${1}/hr".format(self.current_character.job,
+                                                                                        self.current_character.salary)
+            self.timer += .25
             return True
 
+    def apply_for_school(self):
+        degrees = self.classifieds['school']['level']
+
+        for d in degrees.keys():
+            print degrees[d]['degree']
+
+        inDegree = raw_input("For which degree are you applying? " )
+
+        self.validD = [d for d in self.classifieds['school']['level'].keys() if inDegree.lower() == d.lower()][0]
+
+        if len(self.validD) == 0:
+            print "Error: not a valid degree"
+            self.apply_for_school()
+
+        self.validD = self.classifieds['school']['level'][self.validD]
+
+        if self.validD['requirement'] > self.current_character.education:
+            print 'you do not meet the minimum educational requirement'
+            return False
+
+        costMsg = "This Degree will cost ${0}".format(self.validD['cost'])
+        print costMsg
+        
+        if self.current_character.savings < self.validD['cost']:
+            print 'You do not have enough savings to cover the tuition... '
+            print ''
+            yesLoan = raw_input("Would you like to take out a loan? (y/n) ")
+            if yesLoan.lower == 'n':
+                yesLoan = None
+
+        if not yesLoan:
+            print "Very well then, you walked away"
+
+        else:
+            self.apply_for_loan(self.validD['cost'])
+
+        '''
+        ==================================================
+        NEED TO FINISH THIS
+        set character to 'student'
+        able to study
+        make study function
+        =================================================
+        '''
+
+
+    def apply_for_loan(self, amount):
+        '''
+        FOR NOW, THIS IS JUST A PLACEHOLDER AS IF YOU GOT THE LOANS
+        '''
+        print "applying for loan"
+        iRate = 0.05
+        pDate = self.week + self.validD['weeks2complete']
+        pSched = 20
+        self.current_character.studentDebt = self.current_character.studentDebt + amount
+
+
+
+    def weekly_event(self):
+        print "weekly event!"
+        if self.week % 4 == 0:
+            self.monthly_event()
+        return True
+
+    def monthly_event(self):
+        print "monthy event!"
+        
+        rent = 425.00
+        print "your rent is due, {0}! (${1})".format(self.current_character.name, rent)
+
+        self.current_character.savings - rent
+        return True
 
 
     def build_classifieds(self):
@@ -224,205 +328,17 @@ class Game():
         jobsFile = helpers.get_relative_file('saves', 'locs1.fll')
 
         with open(jobsFile) as json_file:
+            #simplejson.loads('json_file')
             self.classifieds = json.load(json_file)
-        
 
-
-
-
-
-class SimpleGame():
-    '''
-    DEPRECATED, FOR REFERENCE ONLY!!!
-    JUST A TEST
-    '''
-    def __init__(self, weekNb = 1, workWeek = 12, timer = 0, gameOver = False):
-        self.week = weekNb
-        self.workWeek = workWeek
-        self.timer = 0 #  self.workWeek
-
-        self.setup(loadGame)
-
-        while self.week <= 3:
-            self.curJobs = classifieds()
-            self.player.classifieds = self.curJobs
-            print "_____Week {} _____".format(self.week)
-            self.player.timer = 0 #  self.workWeek
-            self.runWeek()
-            self.week += 1
-
-        print "game over"
-
-    def setup(self, loadGame = False):
-
-        if loadGame:
-
-            print 'load game'
-
-            charName = 'do'
-        else:
-
-            print "____new game"
-            charName = raw_input("enter your name: ")
-
-
-        self.curJobs = classifieds()
-        self.player = Character(
-                                name = charName,
-                                time = self.timer,
-                                currentJobs = self.curJobs,
-                                speedMultiplier = .33,
-                                salary = 15,
-                                workWeek = self.workWeek
-                                )
-
-
-
-        self.actionInterpreter()
-
-    def actionInterpreter(self):
-        '''
-        builds dictionary to interpret simple commands into character commands
-        '''
-
-        self.actionDict= {}
-        method_list = [func for func in dir(self.player) if callable(getattr(self.player, func)) and not func.startswith("__")]
-
-        for method in method_list:
-            self.actionDict[method] = "self.player.{}()".format(method)#self.player.__dict__[method]
-
+    def displayTime(self):
+        print "you have {} hours left".format(12 - self.timer)
         return True
-
-
-    def runWeek(self):
-        '''
-        the basic work week function that runs
-        '''
-        self.timer = 0
-        while self.timer < self.workWeek:
-            act = raw_input("enter command: ")
-            if act:
-
-                if 'help' in act.lower():
-                    self.userHelp()
-                    return False
-
-                elif 'debug' in act.lower():
-                    self.userDebug()
-                    return False
-                elif 'quit' in act.lower():
-                        quit()
-                        break
-
-                else:
-                    act = [key for key in self.actionDict.keys() if key.lower() == act.lower()][0]
-
-                    if not act:
-                        print "improper command"
-
-                    exec(self.actionDict[act])
-                    print "savings: {}".format(self.player.savings)
-
-            self.timer = self.player.timer
-                    #print self.actionDict[act]
-        #if self.timer <= 0:
-        #    self.week += 1
-        return True
-
-    def userHelp(self):
-        print "__________________help__________________"
-        print "____actions"
-        method_list = [func for func in dir(self.player) if callable(getattr(self.player, func)) and not func.startswith("__")]
-        for method in method_list:
-            print method
-
-    def userDebug(self):
-        print "__________________debug__________________"
-        print "____actions"
-        method_list = [func for func in dir(self.player) if callable(getattr(self.player, func)) and not func.startswith("__")]
-
-        for method in method_list:
-            print method
-        print ""
-        print "____player stats"
-        for stat in  self.player.__dict__.keys():
-            if stat != 'classifieds':
-                print "{0}:  {1}".format(stat, self.player.__dict__[stat])
-
-        print ""
-        print "____classifieds"
-        for key in self.curJobs.jobs:
-            print key, self.curJobs.jobs[key]
-
-
-class classifieds():
-    def __init__(self):
-        self.jobs = {'McDonalds' : 
-                        {
-                        'Cook':
-                                {
-                                 'title': 'Cook',
-                                 'salary': 10,
-                                 'prestige': 1,
-                                 'minApp': 0,
-                                 'minEdu': 0
-                                },
-                        'Supervisor':
-                                {
-                                 'title': 'Supervisor',
-                                 'salary': 12,
-                                 'prestige': 2,
-                                 'minApp': 0,
-                                 'minEdu': 1
-                                },
-                        'Manager':
-                                {
-                                 'title': 'Manager',
-                                 'salary': 15,
-                                 'prestige': 3,
-                                 'minApp': 1,
-                                 'minEdu': 2
-                                },
-                        'Owner':
-                                {
-                                 'title': 'Owner',
-                                 'salary': 25,
-                                 'prestige': 5,
-                                 'minApp': 2,
-                                 'minEdu': 4
-                                }
-                    }}
-
-
-
-    def listJobs(self):
-        print "listing jobs"
-        for location in self.jobs.keys():
-            print location
-            #for job in self.jobs[location]
-            #    print job #  , self.jobs[key]
-
-    def applyForJob(self, job = None, appearance = 0):
-        if job == None:
-            "please select a job"
-            return None
-
-        else:
-            print "you selected {}".format(job)
-
-            if appearance < self.jobs[job]['minApp']:
-                print "you did not get the job, need better appearance"
-                return None
-            else:
-                print 'you got hired as {0}, with a salary of {1}'.format(job, self.jobs[job]['salary'])
-                return self.jobs[job]
-
 
 
 class Character():
     def __init__(   self,
                     name = None,
-                    time = 12.0,
                     apartment = None,
                     hungry = False,
                     appearance = 0,
@@ -433,100 +349,26 @@ class Character():
                     speedMultiplier = 1,
                     workWeek = 12):
 
-        self.name = name
-        self.timer = time
+        self.name = None
+        self.job = None 
+        self.salary = 0
+        self.savings = 0
+        self.education = 0
+        self.studentDebt = 0
+
+        self.attrList = [   self.name,
+                            self.job,
+                            self.salary,
+                            self.savings,
+                            self.education,
+                            self.studentDebt]
+
         self.house = apartment
         self.hungry = hungry
         self.appearance = appearance
-        self.job = None #currentJobs.jobs['McDonalds']['Cook']#job
         self.speed = 14.28
-        self.salary = salary
-        self.savings = savings
-        self.education = education
         self.workWeek = 12#workWeek
 
-
-
-
-    def relax(self):
-        '''
-        generic action to just take up time
-        '''
-        print "timer reduced by {} hours".format(self.speed)
-        self.timer = self.timer + self.speed
-        self.showCounter()
-
-    def showCounter(self):
-        print 'you have {} hours left'.format((self.workWeek - self.timer))
-
-    def applyForJob(self):
-        jobsDict = self.classifieds.jobs
-
-        for location in jobsDict:
-            print location
-            for job in jobsDict[location]:
-                print "  {}".format(job)
-
-
-        inLoc = raw_input("where do you want to work? ")
-        validLoc = [loc for loc in jobsDict.keys() if loc.lower() == inLoc.lower()]
-        if not validLoc:
-            print 'Error: not a valid location'
-            self.applyForJob()
-
-        validLoc = validLoc[0]
-
-        
-        inJob = raw_input("what job do you want to apply for? ")
-        validJob = [job for job in jobsDict[validLoc].keys() if job.lower() == inJob.lower()]
-        if not validJob:
-            print "Error: not a valid job"
-            self.applyForJob()
-
-        else:
-            validJob = validJob[0]
-            goalJob = jobsDict[validLoc][validJob]
-
-            #  check for minimum requirements for jobs
-
-            if self.appearance < goalJob['minApp']:
-                print "you did not get the job, need better appearance."
-                self.timer = self.timer - .25
-                return None
-
-
-            elif self.education < goalJob['minEdu']:
-                print "you did meet the minimum education requirements."
-                self.timer = self.timer - .25
-                return None
-
-            else:
-                print 'you got hired as {0}, with a salary of {1}'.format(validJob, jobsDict[validLoc][validJob]['salary'])
-                self.job = jobsDict[validLoc][validJob]
-                self.salary = self.job['salary']
-
-        if not self.job:
-            print "you are now still unemployed."
-
-        self.timer = self.timer - .25
-
-    def work(self):
-        #print "working"
-        if not self.job:
-            print "you don't have a job yet!"
-
-        else:
-            self.timer = self.timer + (1*self.speed)
-            if self.timer < self.workWeek:
-                self.savings = self.salary + self.savings
-
-            elif self.timer > self.workWeek:
-                overage = abs(self.workWeek - self.timer)
-                print "overage by {} hours".format(overage)
-                self.savings = self.savings + (self.salary * overage)
-                #self.timer = 0
-
-            self.showCounter()
 
     def save(self):
         charData = {}
@@ -536,151 +378,22 @@ class Character():
         charData['savings'] = self.savings
         charData['salary'] = self.salary
         charData['education'] = self.education
+        charData['studentDebt'] = self.studentDebt
 
         return charData
 
     def load(self, data):
-        self.name = data['name']
-        self.job = data['job']
-        self.savings = data['savings']
-        self.salary = data['salary']
-        self.education = data['education']
+        self.name = helpers.load_attr(data, 'name')
+        self.job = helpers.load_attr(data, 'job')
+        self.savings = helpers.load_attr(data, 'savings')
+        self.salary = helpers.load_attr(data, 'salary')
+        self.education = helpers.load_attr(data, 'education')
+
+        '''
+        NEED TO MAKE THIS LOAD DYNAMIC FROM THE ATTRLIST Attribute
+        if helpers.load_attr(data, 'studentDebt'):
+            self.studentDebt = helpers.load_attr(data, 'studentDebt')
+
+        '''
+        self.studentDebt = helpers.load_attr(data, 'studentDebt')
         return
-
-
-
-
-'''
-class oldCharacter():
-    def __init__(   self,
-                    name = "joe",
-                    currentJobs = None,
-                    time = 12.0,
-                    apartment = None,
-                    hungry = False,
-                    appearance = 0,
-                    job = None,
-                    salary = 0.00,
-                    savings = 0.00,
-                    education = 0,
-                    speedMultiplier = 1,
-                    workWeek = 12):
-
-        self.name = name
-        self.classifieds = currentJobs
-        self.timer = time
-        self.house = apartment
-        self.hungry = hungry
-        self.appearance = appearance
-        self.job = None #currentJobs.jobs['McDonalds']['Cook']#job
-        self.speed = 14.28
-        self.salary = salary
-        self.savings = savings
-        self.education = education
-        self.workWeek = 12#workWeek
-
-
-    def relax(self):
-        print "timer reduced by {} hours".format(self.speed)
-        self.timer = self.timer + self.speed
-        self.showCounter()
-
-    def showCounter(self):
-        print 'you have {} hours left'.format((self.workWeek - self.timer))
-
-    def applyForJob(self):
-        jobsDict = self.classifieds.jobs
-
-        for location in jobsDict:
-            print location
-            for job in jobsDict[location]:
-                print "  {}".format(job)
-
-
-        inLoc = raw_input("where do you want to work? ")
-        validLoc = [loc for loc in jobsDict.keys() if loc.lower() == inLoc.lower()]
-        if not validLoc:
-            print 'Error: not a valid location'
-            self.applyForJob()
-
-        validLoc = validLoc[0]
-
-        
-        inJob = raw_input("what job do you want to apply for? ")
-        validJob = [job for job in jobsDict[validLoc].keys() if job.lower() == inJob.lower()]
-        if not validJob:
-            print "Error: not a valid job"
-            self.applyForJob()
-
-        else:
-            validJob = validJob[0]
-            goalJob = jobsDict[validLoc][validJob]
-
-            #  check for minimum requirements for jobs
-
-            if self.appearance < goalJob['minApp']:
-                print "you did not get the job, need better appearance."
-                self.timer = self.timer - .25
-                return None
-
-
-            elif self.education < goalJob['minEdu']:
-                print "you did meet the minimum education requirements."
-                self.timer = self.timer - .25
-                return None
-
-            else:
-                print 'you got hired as {0}, with a salary of {1}'.format(validJob, jobsDict[validLoc][validJob]['salary'])
-                self.job = jobsDict[validLoc][validJob]
-                self.salary = self.job['salary']
-
-        if not self.job:
-            print "you are now still unemployed."
-
-        self.timer = self.timer - .25
-
-    def work(self):
-        #print "working"
-        if not self.job:
-            print "you don't have a job yet!"
-
-        else:
-            self.timer = self.timer + (1*self.speed)
-            if self.timer < self.workWeek:
-                self.savings = self.salary + self.savings
-
-            elif self.timer > self.workWeek:
-                overage = abs(self.workWeek - self.timer)
-                print "overage by {} hours".format(overage)
-                self.savings = self.savings + (self.salary * overage)
-                #self.timer = 0
-
-            self.showCounter()
-
-def loadGame():
-    print 'hi'
-
-class Job():
-    def __init__(self, salary = 10, prestige = 1):
-        self.salary = salary
-        self.prestige = prestige
-
-class Build():
-    def __init__(self):
-        self.null = None
-
-    def buildGfx(self):
-        self.Graphics = None
-
-class Week():
-    def __init__(self, week = 0):
-        self.week = week
-'''
-
-
-class venue():
-    def __init__(self, name = None, type = None, location = [0,0], jobs = None):
-        self.name = None
-        self.type = None
-        self.location = location
-        self.jobs = None
