@@ -150,12 +150,14 @@ class Game():
     def info(self):
         if self.current_character:
 
-            print 'Name:       {}'.format(self.current_character.name)
-            print 'Savings:    {}'.format(self.current_character.savings)
-            print 'Salary:     {}/hr'.format(self.current_character.salary)
-            print 'Job:        {}'.format(self.current_character.job)
-            print 'Edu.level:  {}'.format(self.current_character.education)
-            print 'week nb:    {}'.format(self.week)
+            print 'Name:            {}'.format(self.current_character.name)
+            print 'Savings:         {}'.format(self.current_character.savings)
+            print 'Salary:          {}/hr'.format(self.current_character.salary)
+            print 'Job:             {}'.format(self.current_character.job)
+            print 'Edu.level:       {}'.format(self.current_character.education)
+            print 'Student Debt:    {}'.format(self.current_character.studentDebt)
+            print 'Student?:        {}'.format(self.current_character.student)
+            print 'week nb:         {}'.format(self.week)
         else:
             print "no character intialized"
 
@@ -239,7 +241,7 @@ class Game():
             self.timer += .25
 
             return False
-
+            print "more...................."
         else:
             self.current_character.job = goalJob['title']
             self.current_character.salary = goalJob['salary']
@@ -281,9 +283,13 @@ class Game():
 
         if not yesLoan:
             print "Very well then, you walked away"
+            return False
 
         else:
             self.apply_for_loan(self.validD['cost'])
+
+        self.current_character.student = self.validD["degree"]
+
 
         '''
         ==================================================
@@ -298,12 +304,17 @@ class Game():
     def apply_for_loan(self, amount):
         '''
         FOR NOW, THIS IS JUST A PLACEHOLDER AS IF YOU GOT THE LOANS
+        NEED TO EVENTUALLY MAKE THIS ACCURATE TO ACTUAL LOAN REPAYMENT
+        RIGHT NOW IT'S A FLAT 10 YEAR LOAN WITH 0 INTEREST
         '''
         print "applying for loan"
         iRate = 0.05
         pDate = self.week + self.validD['weeks2complete']
         pSched = 20
         self.current_character.studentDebt = self.current_character.studentDebt + amount
+
+        self.current_character.studentDebtRate = ((self.current_character.studentDebt)/ 120.0) # (Student Debt Amount / 120 Months)
+
 
 
 
@@ -319,7 +330,11 @@ class Game():
         rent = 425.00
         print "your rent is due, {0}! (${1})".format(self.current_character.name, rent)
 
-        self.current_character.savings - rent
+        if self.current_character.studentDebt > 0:
+            print "your student loan payment is due, ${0}".format(self.current_character.studentDebtRate)
+            self.current_character.savings = self.current_character.savings - self.current_character.studentDebtRate
+
+        self.current_character.savings = self.current_character.savings - rent
         return True
 
 
@@ -354,14 +369,17 @@ class Character():
         self.salary = 0
         self.savings = 0
         self.education = 0
+        self.student = None
         self.studentDebt = 0
+        self.studentDebtInit = 0
 
         self.attrList = [   self.name,
                             self.job,
                             self.salary,
                             self.savings,
                             self.education,
-                            self.studentDebt]
+                            self.studentDebt,
+                            self.student]
 
         self.house = apartment
         self.hungry = hungry
@@ -379,6 +397,9 @@ class Character():
         charData['salary'] = self.salary
         charData['education'] = self.education
         charData['studentDebt'] = self.studentDebt
+        charData['studentDebtRate'] = self.studentDebtRate
+        charData['student'] = self.student
+
 
         return charData
 
@@ -389,11 +410,19 @@ class Character():
         self.salary = helpers.load_attr(data, 'salary')
         self.education = helpers.load_attr(data, 'education')
 
+        student = helpers.load_attr(data, 'student')
+        self.student = (student if student else 0)
+
+        studentDebt = helpers.load_attr(data, 'studentDebt')
+        self.studentDebt = (studentDebt if studentDebt else 0)
+
+        studentDebtRate = helpers.load_attr(data, 'studentDebtRate')
+        self.studentDebtRate = (studentDebtRate if studentDebtRate else 0)
+
         '''
         NEED TO MAKE THIS LOAD DYNAMIC FROM THE ATTRLIST Attribute
         if helpers.load_attr(data, 'studentDebt'):
             self.studentDebt = helpers.load_attr(data, 'studentDebt')
 
         '''
-        self.studentDebt = helpers.load_attr(data, 'studentDebt')
         return
