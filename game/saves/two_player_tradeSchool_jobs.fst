@@ -1,0 +1,1 @@
+{"week": 3, "character": [{"salary": 10, "name": "dave", "job": "Cook", "studytime": 390, "savings": 1112.5, "studentDebtRate": 41.666666666666664, "student": "trade", "studentDebt": 5000, "education": 0}, {"salary": 9, "name": "dani", "job": "janitor", "studytime": 0, "savings": 1001.25, "studentDebtRate": 0, "student": 0, "studentDebt": 0, "education": 0}], "timer": 0}

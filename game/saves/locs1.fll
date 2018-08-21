@@ -47,7 +47,7 @@
                                      "title": "Teller",
                                      "salary": 12,
                                      "prestige": 1,
-                                     "minApp": 1,
+                                     "minApp": 0,
                                      "minEdu": 1
                                     },
                             "Supervisor":

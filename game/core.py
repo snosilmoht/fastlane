@@ -7,12 +7,16 @@ import helpers
 '''
 to do:
 
+ CURRENTLY
+ --- work on student debt: proper loan structuring and formula!
+
  --- add more unit tests
  ----- fix error on bad commands
  --- build jobs dictionary (= save file)
  --- relax function
  --- shop functions
  --- health insurance!
+
 
  --- locations:
         locations are currently only loaded from locs1.fll file, need to turn
@@ -129,7 +133,7 @@ class Game():
             json.dump(saveData, outfile)
 
     def load(self):
-        loadName = '2player_001.fst'
+        loadName = 'dave_cheating.fst'
         loadFile = helpers.get_relative_file('saves', loadName)
 
         print "_______loading {}".format(loadFile)
@@ -155,8 +159,11 @@ class Game():
             print 'Salary:          {}/hr'.format(self.current_character.salary)
             print 'Job:             {}'.format(self.current_character.job)
             print 'Edu.level:       {}'.format(self.current_character.education)
-            print 'Student Debt:    {}'.format(self.current_character.studentDebt)
+            print 'Student Debt:    {}'.format(round(self.current_character.studentDebt, 2))
             print 'Student?:        {}'.format(self.current_character.student)
+            if self.current_character.student:
+                print 'CreditHours Left:{}'.format(self.current_character.studytime)
+            print ''
             print 'week nb:         {}'.format(self.week)
         else:
             print "no character intialized"
@@ -172,18 +179,50 @@ class Game():
             print 'you are unemployed!'
             return False
 
-        workTimer = self.timer + 1
+        t = self.do_hour()
+        self.current_character.savings = self.current_character.savings + ((self.current_character.salary * 5) * t)
+        
+        self.timer += 1
 
+    def study(self):
+        if not self.current_character.student:
+            print "you are not currently enrolled"
+            return False
+        
+        time = self.current_character.studytime
+
+        print "you are currently enrolled as: {}".format(self.current_character.student)
+        print "you have {} hours left before your course is complete".format(time)
+        self.timer = self.timer + 1
+        studyTimer = 1
         overtime = None
+
+        t = self.do_hour()
+
+        self.current_character.studytime = time - (t * 5)
+
+        if self.current_character.studytime <= 0:
+            degree = self.classifieds['school']['level'][self.current_character.student]
+            self.current_character.education = degree['outEdu']
+            print "You graduated with a {}!".format(degree['nicename'])
+            self.current_character.student = None
+        print "You studied, you have {} hours left in your course".format(self.current_character.studytime)
+
+    def do_hour(self):
+        '''
+        Adds one game hour and returns approprate overtime if necessary
+        '''
+        overtime = None
+        workTimer = self.timer + 1
 
         if workTimer - 12.0 > 0:
             overtime = self.timer - 12.0
             print "overtime hours: {}"
 
         t = (overtime if overtime else 1)
-        self.current_character.savings = self.current_character.savings + ((self.current_character.salary * 5) * t)
-        
-        self.timer += 1
+
+        return t
+
 
     def apply_for_job(self):
         '''
@@ -289,6 +328,7 @@ class Game():
             self.apply_for_loan(self.validD['cost'])
 
         self.current_character.student = self.validD["degree"]
+        self.current_character.studytime = self.validD['hours']
 
 
         '''
@@ -316,8 +356,6 @@ class Game():
         self.current_character.studentDebtRate = ((self.current_character.studentDebt)/ 120.0) # (Student Debt Amount / 120 Months)
 
 
-
-
     def weekly_event(self):
         print "weekly event!"
         if self.week % 4 == 0:
@@ -331,7 +369,7 @@ class Game():
         print "your rent is due, {0}! (${1})".format(self.current_character.name, rent)
 
         if self.current_character.studentDebt > 0:
-            print "your student loan payment is due, ${0}".format(self.current_character.studentDebtRate)
+            print "your student loan payment is due, ${0}".format(round(self.current_character.studentDebtRate, 2))
             self.current_character.savings = self.current_character.savings - self.current_character.studentDebtRate
 
         self.current_character.savings = self.current_character.savings - rent
@@ -349,6 +387,11 @@ class Game():
     def displayTime(self):
         print "you have {} hours left".format(12 - self.timer)
         return True
+
+    def c(self):
+        exec(raw_input('enter raw command: '))
+        return True
+
 
 
 class Character():
@@ -372,6 +415,7 @@ class Character():
         self.student = None
         self.studentDebt = 0
         self.studentDebtInit = 0
+        self.studytime = 0
 
         self.attrList = [   self.name,
                             self.job,
@@ -379,7 +423,8 @@ class Character():
                             self.savings,
                             self.education,
                             self.studentDebt,
-                            self.student]
+                            self.student,
+                            self.studytime]
 
         self.house = apartment
         self.hungry = hungry
@@ -399,6 +444,7 @@ class Character():
         charData['studentDebt'] = self.studentDebt
         charData['studentDebtRate'] = self.studentDebtRate
         charData['student'] = self.student
+        charData['studytime'] = self.studytime
 
 
         return charData
@@ -418,6 +464,9 @@ class Character():
 
         studentDebtRate = helpers.load_attr(data, 'studentDebtRate')
         self.studentDebtRate = (studentDebtRate if studentDebtRate else 0)
+
+        studytime = helpers.load_attr(data, 'studytime')
+        self.studytime = (studytime if studytime else 0)       
 
         '''
         NEED TO MAKE THIS LOAD DYNAMIC FROM THE ATTRLIST Attribute
