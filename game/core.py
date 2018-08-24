@@ -348,9 +348,9 @@ class Game():
         RIGHT NOW IT'S A FLAT 10 YEAR LOAN WITH 0 INTEREST
         '''
         print "applying for loan"
-        iRate = 0.05
+        rate = 0.05
         pDate = self.week + self.validD['weeks2complete']
-        pSched = 20
+        periods = 20
         self.current_character.studentDebt = self.current_character.studentDebt + amount
 
         self.current_character.studentDebtRate = ((self.current_character.studentDebt)/ 120.0) # (Student Debt Amount / 120 Months)
