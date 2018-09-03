@@ -65,6 +65,7 @@ def load_attr(source, key):
 
 
 #  Student Loan Interest
+
 def interestCalc(principle, rate, time):
     '''
     A = P * ((1 + (r/n)) ^ n*t)
@@ -85,25 +86,42 @@ def interestCalc(principle, rate, time):
 
     P = float(principle)
     r = float(rate)
-    t = float((time/12))
+    t = float(time)#float((time/12))
     n = 365.00
 
     A = P * ((1 + (r/n)) ** (n*t))
+    print "interest: {}".format(A)
+
+    return A
+
+def compoundWithPmts(principle, rate, periods, payment):
+    '''
+    calculate compound interest with payments
+    
+    A = PMT(1+i)(  (  (1 + i)^n -1 ) / (i)  )
+
+    A   = future amount (value)
+    PMT = monthly payment
+    i   = rate (in months, not years!)
+    n   = periods (in months!)
+
+    '''
+
+    PMT = payment
+    i = rate / 12
+    n = periods
+
+    A = ( PMT * (1 + i) ) * ( ( ((1 + i)**n) - 1 ) / i )
 
     return A
 
 
-
-
-
-
 def loanPmt(principle, rate, periods):
     Pv = float(principle)
-    R = float(rate)#.01 * rate
-    print "rate: {}".format(R)
+    R = float(rate)/12   #Need to divide by 12 to get MONTHLY rate
     Pr = float(periods)
 
-    amt = float((Pv * R)/(1-(1 + R)**(-1*Pr)))
+    amt = float(  (Pv * R)/(1-(1 + R)**(-1*Pr))  )
     amt = round(amt, 2)
 
     return amt
@@ -131,29 +149,37 @@ def fafsaStandard(principle, rate):
     '''
 
     Pv = principle
+    yrs = 0 #  years in school not accumulating interest
 
     if Pv < 7501:
-        Pr = 10
+        Pr = (10 - yrs)
 
     elif Pv < 10001:
-        Pr = 12
+        Pr = (12 - yrs)
 
     elif Pv < 20001:
-        Pr = 15
+        Pr = (15 - yrs)
 
     elif Pv < 40001:
-        Pr = 20
+        Pr = (20 - yrs)
 
     elif Pv > 60000:
-        Pr = 30
+        Pr = (30 - yrs)
 
-    interest = loanPmt(Pv, rate, Pr)
+    interest = interestCalc(Pv, rate, Pr)
     interest = round(interest, 2)
+
 
     return interest
 
 Pv = 26946
 i = 0.039
-Pr = 72
+Pr = 20
 
-print interestCalc(Pv, i, Pr)
+#print compoundWithPmts(0, 0.0125, 360.0, 200.0)
+
+#print fafsaStandard(Pv, i )
+#
+#print interestCalc(5000, 0.05, 10) # should yield 8235.047
+#
+print loanPmt(100000, 0.0374/12, 20*12)

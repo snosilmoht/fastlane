@@ -8,7 +8,10 @@ import helpers
 to do:
 
  CURRENTLY
- --- work on student debt: proper loan structuring and formula!
+ ---FIND compound interest function that takes into account contributions/payments
+
+ TO DO:
+ --- proper fafsa formulas
 
  --- add more unit tests
  ----- fix error on bad commands
@@ -347,8 +350,11 @@ class Game():
         NEED TO EVENTUALLY MAKE THIS ACCURATE TO ACTUAL LOAN REPAYMENT
         RIGHT NOW IT'S A FLAT 10 YEAR LOAN WITH 0 INTEREST
         '''
-        print "applying for loan"
-        rate = 0.05
+        print "applying for loan (FAFSA standard)"
+        rate = 0.039
+        print "current student loan rate: {}".format(rate*100)
+
+
         pDate = self.week + self.validD['weeks2complete']
         periods = 20
         self.current_character.studentDebt = self.current_character.studentDebt + amount
